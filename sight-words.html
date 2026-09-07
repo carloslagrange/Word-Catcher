@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Catcher</title>
+<style>
+  :root {
+    --yellow: #FFCB05;
+    --blue: #3B4CCA;
+    --red: #FF1C1C;
+    --amber: #F0A500;
+    --dark: #2A2A2A;
+    --green: #3EC85E;
+    --line: #DDE2F2;
+    --wash: #f4f6ff;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, #FFE066 0%, #FFCB05 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--dark);
+  }
+
+  .frame {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 12px 0 var(--blue), 0 16px 30px rgba(0,0,0,0.3);
+    border: 6px solid var(--blue);
+    max-width: 480px;
+    width: 100%;
+    padding: 28px 24px;
+    text-align: center;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  h1 {
+    color: var(--blue);
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 0 6px;
+    text-shadow: 2px 2px 0 var(--yellow);
+  }
+
+  .lede {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0 0 20px;
+  }
+
+  /* ---------- Setup ---------- */
+  .list-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    background: var(--yellow);
+    color: var(--dark);
+    border: none;
+    border-radius: 14px;
+    padding: 15px 18px;
+    margin-bottom: 11px;
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #C9A100;
+  }
+  .list-option:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #C9A100;
+  }
+  .list-option:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+  .list-option .count {
+    font-size: 0.8rem;
+    font-weight: normal;
+    opacity: .75;
+    white-space: nowrap;
+  }
+  .list-icon {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    flex: none;
+  }
+  .list-label { flex: 1; }
+  .list-option.trouble {
+    background: var(--blue);
+    color: white;
+    box-shadow: 0 5px 0 #232f8f;
+  }
+  .list-option.trouble:active { box-shadow: 0 1px 0 #232f8f; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #999;
+    font-size: 0.82rem;
+    margin: 20px 0 12px;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    height: 2px;
+    background: var(--line);
+    flex: 1;
+    border-radius: 1px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 76px;
+    border: 3px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--dark);
+    resize: vertical;
+  }
+  textarea:focus-visible { outline: none; border-color: var(--blue); }
+
+  .start-btn {
+    width: 100%;
+    margin-top: 14px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 15px;
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #232f8f;
+  }
+  .start-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #232f8f;
+  }
+  .start-btn:disabled {
+    background: #ccc;
+    color: #888;
+    cursor: default;
+    box-shadow: 0 5px 0 #aaa;
+    transform: none;
+  }
+  .start-btn:focus-visible { outline: 3px solid var(--dark); outline-offset: 3px; }
+
+  /* ---------- Card ---------- */
+  .meter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--wash);
+    border-radius: 14px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .track {
+    background: #eee;
+    border-radius: 10px;
+    height: 14px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--green), #2fae4e);
+    transition: width .4s ease;
+  }
+
+  .word {
+    font-family: "Century Gothic", "URW Gothic", "Avenir Next", sans-serif;
+    font-size: clamp(3.2rem, 16vw, 5.4rem);
+    font-weight: bold;
+    color: var(--blue);
+    text-align: center;
+    line-height: 1.05;
+    padding: 40px 8px 44px;
+    word-break: break-word;
+  }
+
+  .rating { display: grid; gap: 11px; }
+  .rate-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    border: none;
+    border-radius: 14px;
+    padding: 18px 20px;
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+  }
+  .rate-btn:active { transform: translateY(4px); }
+  .rate-btn:focus-visible { outline: 3px solid var(--dark); outline-offset: 3px; }
+  .rate-btn .sub {
+    font-weight: normal;
+    font-size: 0.85rem;
+    opacity: .85;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .rate-green { background: var(--green); box-shadow: 0 5px 0 #2a9c46; }
+  .rate-green:active { box-shadow: 0 1px 0 #2a9c46; }
+  .rate-amber { background: var(--amber); box-shadow: 0 5px 0 #b87d00; }
+  .rate-amber:active { box-shadow: 0 1px 0 #b87d00; }
+  .rate-red { background: var(--red); box-shadow: 0 5px 0 #b31414; }
+  .rate-red:active { box-shadow: 0 1px 0 #b31414; }
+
+  .quit {
+    display: block;
+    margin: 18px auto 0;
+    background: none;
+    border: none;
+    color: #999;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .quit:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  /* ---------- Reward ---------- */
+  #catch-gif {
+    width: 230px;
+    height: 230px;
+    object-fit: contain;
+    display: block;
+    margin: 20px auto 12px;
+  }
+  .catch-caption {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--blue);
+    padding-bottom: 40px;
+  }
+  .reward-hero {
+    width: 132px;
+    height: 132px;
+    object-fit: contain;
+    display: block;
+    margin: 4px auto;
+    animation: bob 2.2s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(-4deg); }
+  }
+  .reward-emoji {
+    font-size: 5.2rem;
+    line-height: 1.2;
+    display: block;
+    margin: 4px auto;
+  }
+  .reward-eyebrow {
+    color: #888;
+    font-size: 0.9rem;
+  }
+  .reward-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--blue);
+    margin-bottom: 18px;
+  }
+  .reward-sentence {
+    font-family: "Century Gothic", "URW Gothic", "Avenir Next", sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.45;
+    color: var(--dark);
+    background: var(--wash);
+    border-radius: 16px;
+    padding: 20px 16px;
+    margin-bottom: 20px;
+  }
+  .reward-sentence mark {
+    background: var(--yellow);
+    color: var(--dark);
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 1px 5px;
+  }
+  .caught-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 18px;
+    min-height: 34px;
+  }
+  .caught-strip img.caught-mini {
+    width: 34px; height: 34px;
+    object-fit: contain;
+    background: var(--wash);
+    border-radius: 8px;
+    padding: 4px;
+  }
+  .caught-strip span {
+    font-size: 1.4rem;
+    background: var(--wash);
+    border-radius: 8px;
+    padding: 3px 6px;
+  }
+
+  /* ---------- Report ---------- */
+  .tally {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 9px;
+    margin-bottom: 22px;
+  }
+  .tally div {
+    background: var(--wash);
+    border-radius: 14px;
+    padding: 13px 8px;
+    text-align: center;
+  }
+  .tally .n {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--blue);
+    line-height: 1.1;
+  }
+  .tally .k {
+    font-size: 0.75rem;
+    color: #777;
+    margin-top: 3px;
+  }
+
+  .group { margin-bottom: 20px; text-align: left; }
+  .group h2 {
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: var(--dark);
+    margin: 0 0 9px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex: none;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    background: var(--wash);
+    border-radius: 9px;
+    padding: 6px 11px;
+    font-size: 0.95rem;
+    font-weight: bold;
+  }
+  .none { color: #999; font-size: 0.9rem; font-weight: normal; }
+
+  /* ---------- Tablet ---------- */
+  @media (min-width: 700px) {
+    .frame { max-width: 640px; padding: 40px 40px; }
+    h1 { font-size: 2rem; }
+    .lede { font-size: 1.05rem; }
+    .list-option { font-size: 1.2rem; padding: 18px 22px; }
+    .meter { font-size: 1.1rem; padding: 14px 20px; }
+    .word { padding: 52px 8px 56px; }
+    .rate-btn { font-size: 1.25rem; padding: 22px 24px; }
+    .start-btn { font-size: 1.25rem; padding: 18px; }
+    .reward-hero { width: 160px; height: 160px; }
+    #catch-gif { width: 300px; height: 300px; }
+    .reward-sentence { font-size: 1.75rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, .reward-hero { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <!-- SETUP -->
+  <section id="setup" class="screen active">
+    <h1>Word Catcher</h1>
+    <p class="lede">Hold the screen so your reader can see the word. However he gets there — sounding it out counts — tap whether he got it. Words he misses come back around; words he lands twice in a row are caught.</p>
+
+    <div id="trouble-slot"></div>
+
+    <div id="list-buttons"></div>
+
+    <div class="divider">or use your own words</div>
+    <textarea id="custom-words" placeholder="Type words separated by commas or spaces"></textarea>
+    <button class="start-btn" id="start-custom" disabled>Start with my words</button>
+  </section>
+
+  <!-- CARD -->
+  <section id="practice" class="screen">
+    <div class="meter">
+      <span id="meter-label">0 of 0 known</span>
+      <span id="meter-list"></span>
+    </div>
+    <div class="track"><div class="fill" id="fill"></div></div>
+
+    <div class="word" id="word">word</div>
+
+    <div class="rating">
+      <button class="rate-btn rate-green" data-rating="green">
+        Got it <span class="sub" id="key-green">1</span>
+      </button>
+      <button class="rate-btn rate-amber" data-rating="amber" id="btn-amber" style="display:none;">
+        Got it, but slowly <span class="sub">2</span>
+      </button>
+      <button class="rate-btn rate-red" data-rating="red">
+        Didn't get it <span class="sub" id="key-red">2</span>
+      </button>
+    </div>
+
+    <button class="quit" id="quit">End here and see results</button>
+  </section>
+
+  <!-- REWARD -->
+  <section id="reward" class="screen reward">
+    <div id="catch-anim" style="display:none;">
+      <img id="catch-gif" alt="Catching...">
+      <div class="catch-caption">Gotcha?</div>
+    </div>
+    <div id="reveal">
+      <div id="reward-art"></div>
+      <div class="reward-eyebrow">You caught</div>
+      <div class="reward-name" id="reward-name"></div>
+      <div class="reward-sentence" id="reward-sentence"></div>
+      <div class="caught-strip" id="caught-strip"></div>
+      <button class="start-btn" id="reward-next">Keep going</button>
+    </div>
+  </section>
+
+  <!-- REPORT -->
+  <section id="report" class="screen">
+    <h1 id="report-title">Session results</h1>
+    <p class="lede" id="report-lede"></p>
+
+    <div class="tally" id="tally">
+      <div><div class="n" id="t-green">0</div><div class="k">caught</div></div>
+      <div id="tally-amber"><div class="n" id="t-amber">0</div><div class="k">slow or corrected</div></div>
+      <div><div class="n" id="t-red">0</div><div class="k">still training</div></div>
+    </div>
+
+    <div class="group">
+      <h2><span class="dot" style="background:var(--green)"></span>Caught</h2>
+      <div class="chips" id="g-green"></div>
+    </div>
+    <div class="group" id="group-amber">
+      <h2><span class="dot" style="background:var(--amber)"></span>Read it, but slowly</h2>
+      <div class="chips" id="g-amber"></div>
+    </div>
+    <div class="group">
+      <h2><span class="dot" style="background:var(--red)"></span>Still training</h2>
+      <div class="chips" id="g-red"></div>
+    </div>
+
+    <button class="start-btn" id="again">Back to word lists</button>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Dolch sight word lists (Edward Dolch, 1936 — long in the public domain),
+  // with one change: the genuinely irregular words have been pulled out of all
+  // three levels and gathered into the Master Ball list below.
+  //
+  // The three ball lists now hold words that are decodable with regular phonics,
+  // so sounding them out is the correct strategy, not a fallback. Master Ball
+  // holds the words where the letters lie and memorization is the right approach.
+  //
+  // Where a word sits is a judgment call at the edges — 'is' and 'has' end in an
+  // s that says /z/, 'all' follows the -all pattern, 'for' is r-controlled. I left
+  // those in the decodable lists as teachable patterns. Move any of them into
+  // the heart list if you'd rather they be memorized.
+  const LISTS = {
+    preprimer: {
+      name: 'Poké Ball',
+      note: 'every trainer starts here',
+      icon: 'Pokeball.png',
+      words: ['and','away','big','blue','can','down','find','for','funny','go','help','in','is','it','jump','little','look','make','me','my','not','play','red','run','see','three','up','we','yellow']
+    },
+    primer: {
+      name: 'Great Ball',
+      note: 'a step up',
+      icon: 'Greatball.png',
+      words: ['all','am','at','ate','be','black','brown','but','came','did','eat','get','good','he','into','like','must','new','no','now','on','out','please','ran','ride','saw','say','she','so','soon','that','this','too','under','well','went','white','will','with','yes']
+    },
+    first: {
+      name: 'Ultra Ball',
+      note: 'for the tough catches',
+      icon: 'Ultraball.png',
+      words: ['after','an','as','ask','by','every','fly','from','going','had','has','her','him','his','how','just','let','may','old','open','over','round','stop','take','thank','them','then','think','when']
+    },
+    heart: {
+      name: 'Master Ball',
+      note: "can't be sounded out — you just know them",
+      icon: 'Masterball.png',
+      // These can't be decoded, so instant recall is the goal. This list gets
+      // the third button: correct but slow or self-corrected still counts as
+      // read, but doesn't advance toward a catch.
+      threeWay: true,
+      words: ['a','again','any','are','come','could','do','four','give','have','here','I','know','live','of','once','one','our','pretty','put','said','some','the','there','they','to','two','walk','want','was','were','what','where','who','you']
+    }
+  };
+
+  // A word is caught after this many correct reads in a row.
+  const GREENS_TO_RETIRE = 2;
+  // How far back a word goes after each rating, as a [min, max] range of cards.
+  // The range is randomized each time so a run of correct answers doesn't produce
+  // the same words coming back in the same order.
+  const REQUEUE = { green: [14, 24], amber: [6, 11], red: [3, 6] };
+  const TROUBLE_KEY = 'sightWords_trouble';
+
+  // Same roster and image files as the times tables game — drop the same
+  // image files in this folder and they'll show up here too.
+  const CHARACTERS = ['Pikachu','Charizard','Squirtle','Bulbasaur','Jolteon','Butterfree','Blastoise','Charmander','Psyduck','Gastly','Dratini','Starmie'];
+  const FALLBACK_EMOJI = ['🐭','🔥','💧','🌿','⚡','🦋','🐢','🦎','🐧','👻','🐉','⭐'];
+  const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif'];
+
+  // Shown while the catch "happens", just before the character is revealed.
+  // Drop this file next to the HTML; if it's missing the reveal just happens instantly.
+  const CATCH_GIF = 'caught-pokemon.gif';
+  const CATCH_MS = 1300;
+
+  // One sentence per sight word. {n} is swapped for a character name, and the
+  // target word is highlighted when shown. Kept to short, mostly-decodable words.
+  const SENTENCES = {
+    // Pre-primer
+    'a': '{n} has a hat.',
+    'and': '{n} and I are pals.',
+    'away': '{n} ran away fast!',
+    'big': '{n} is big and strong.',
+    'blue': '{n} likes the blue sky.',
+    'can': '{n} can jump high!',
+    'come': 'Come here, {n}!',
+    'down': '{n} fell down in the mud.',
+    'find': 'Can you find {n}?',
+    'for': 'This one is for {n}.',
+    'funny': '{n} is so funny!',
+    'go': 'Go, {n}, go!',
+    'help': '{n} will help you.',
+    'here': '{n} is here!',
+    'i': 'I like {n}.',
+    'in': '{n} is in the box.',
+    'is': '{n} is my pal.',
+    'it': '{n} got it!',
+    'jump': 'Watch {n} jump!',
+    'little': '{n} is a little guy.',
+    'look': 'Look at {n} run!',
+    'make': '{n} can make a nest.',
+    'me': '{n} ran to me.',
+    'my': '{n} is my best pal.',
+    'not': '{n} is not sad.',
+    'one': '{n} is the one!',
+    'play': "Let's play with {n}.",
+    'red': '{n} has red spots.',
+    'run': '{n} can run fast.',
+    'said': '"Hi!" said {n}.',
+    'see': 'I see {n}!',
+    'the': '{n} is the best.',
+    'three': '{n} ate three nuts.',
+    'to': '{n} ran to the pond.',
+    'two': '{n} has two ears.',
+    'up': '{n} jumped up high!',
+    'we': 'We like {n}.',
+    'where': 'Where did {n} go?',
+    'yellow': '{n} is yellow and black.',
+    'you': '{n} likes you!',
+
+    // Primer
+    'all': '{n} ate all the food!',
+    'am': "I am {n}'s pal.",
+    'are': 'You are fast, {n}!',
+    'at': 'Look at {n} go!',
+    'ate': '{n} ate a big lunch.',
+    'be': '{n} will be back soon.',
+    'black': '{n} has black spots.',
+    'brown': '{n} sat on a brown log.',
+    'but': '{n} is small but fast.',
+    'came': '{n} came to play.',
+    'did': '{n} did it!',
+    'do': 'What can {n} do?',
+    'eat': '{n} likes to eat.',
+    'four': '{n} has four legs.',
+    'get': 'Get the ball, {n}!',
+    'good': '{n} is a good pal.',
+    'have': '{n} and I have fun.',
+    'he': '{n} is quick. He can win!',
+    'into': '{n} ran into the cave.',
+    'like': 'I like {n} a lot.',
+    'must': '{n} must rest now.',
+    'new': '{n} has a new pal.',
+    'no': 'No, {n}, stop!',
+    'now': '{n} is fast now.',
+    'on': '{n} sat on a rock.',
+    'our': '{n} is our pal.',
+    'out': '{n} ran out fast.',
+    'please': 'Please help {n}!',
+    'pretty': '{n} is pretty.',
+    'ran': '{n} ran and ran.',
+    'ride': '{n} can ride fast.',
+    'saw': 'I saw {n} run!',
+    'say': 'What did {n} say?',
+    'she': 'She likes {n}.',
+    'so': '{n} is so fast!',
+    'soon': '{n} will win soon.',
+    'that': 'That is {n}!',
+    'there': '{n} is over there.',
+    'they': 'They play with {n}.',
+    'this': 'This is {n}.',
+    'too': '{n} can jump too!',
+    'under': '{n} hid under a log.',
+    'want': 'I want to see {n}.',
+    'was': '{n} was in the grass.',
+    'well': '{n} did well!',
+    'went': '{n} went to the pond.',
+    'what': 'What is {n} doing?',
+    'white': '{n} has white spots.',
+    'who': 'Who can catch {n}?',
+    'will': '{n} will win!',
+    'with': 'Come play with {n}.',
+    'yes': 'Yes! {n} did it!',
+
+    // First grade
+    'after': '{n} ran after the ball.',
+    'again': '{n} did it again!',
+    'an': '{n} ate an egg.',
+    'any': '{n} did not see any bugs.',
+    'as': '{n} is as fast as me.',
+    'ask': 'Ask {n} to play.',
+    'by': '{n} sat by the pond.',
+    'could': '{n} could run fast.',
+    'every': '{n} wins every time!',
+    'fly': '{n} can fly high!',
+    'from': '{n} came from the cave.',
+    'give': 'Give the ball to {n}.',
+    'going': '{n} is going home.',
+    'had': '{n} had a good day.',
+    'has': '{n} has big ears.',
+    'her': '{n} ran to her nest.',
+    'him': '{n} won! I saw him do it.',
+    'his': '{n} lost his hat.',
+    'how': 'How fast can {n} run?',
+    'just': '{n} just won the race!',
+    'know': 'I know {n}!',
+    'let': 'Let {n} play too.',
+    'live': 'Where does {n} live?',
+    'may': '{n} may come with us.',
+    'of': '{n} is the best of all!',
+    'old': '{n} sat on an old log.',
+    'once': '{n} won once before.',
+    'open': '{n} can open the box.',
+    'over': '{n} jumped over the log.',
+    'put': 'Put the hat on {n}.',
+    'round': '{n} has round eyes.',
+    'some': '{n} ate some nuts.',
+    'stop': 'Stop, {n}! Wait!',
+    'take': 'Take {n} with you.',
+    'thank': 'Thank you, {n}!',
+    'them': '{n} likes them a lot.',
+    'then': '{n} ran, then jumped!',
+    'think': 'I think {n} will win.',
+    'walk': '{n} likes to walk.',
+    'were': 'We were with {n}.',
+    'when': 'When will {n} come?'
+  };
+
+  let deck = [];        // queue of word strings still in rotation
+  let stats = {};       // word -> { green, amber, red, streak }
+  let retired = [];     // words that hit the retire threshold, in order
+  let totalWords = 0;
+  let listLabel = '';
+  let threeWay = false;  // Master Ball uses the extra 'got it, but slowly' button
+
+  const $ = id => document.getElementById(id);
+  const screens = {
+    setup: $('setup'),
+    practice: $('practice'),
+    reward: $('reward'),
+    report: $('report')
+  };
+
+  function show(name) {
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ---------- Setup ----------
+  function buildSetup() {
+    const box = $('list-buttons');
+    box.innerHTML = '';
+    Object.entries(LISTS).forEach(([key, list]) => {
+      const b = document.createElement('button');
+      b.className = 'list-option';
+
+      if (list.icon) {
+        const icon = document.createElement('img');
+        icon.className = 'list-icon';
+        icon.alt = '';
+        icon.src = list.icon;
+        // If the image is missing, drop it rather than showing a broken icon.
+        icon.onerror = () => icon.remove();
+        b.appendChild(icon);
+      }
+
+      const label = document.createElement('span');
+      label.className = 'list-label';
+      label.innerHTML = `${list.name}<br><span class="count">${list.note}</span>`;
+      b.appendChild(label);
+
+      const count = document.createElement('span');
+      count.className = 'count';
+      count.textContent = `${list.words.length} words`;
+      b.appendChild(count);
+
+      b.addEventListener('click', () => start(list.words, list.name, !!list.threeWay));
+      box.appendChild(b);
+    });
+
+    const trouble = loadTrouble();
+    const slot = $('trouble-slot');
+    slot.innerHTML = '';
+    if (trouble.length) {
+      const b = document.createElement('button');
+      b.className = 'list-option trouble';
+      b.innerHTML = `<span class="list-label">Keep training<br><span class="count">words from last time</span></span>` +
+                    `<span class="count">${trouble.length} words</span>`;
+      b.addEventListener('click', () => start(trouble, 'Keep training'));
+      slot.appendChild(b);
+    }
+  }
+
+  const customBox = $('custom-words');
+  const customBtn = $('start-custom');
+
+  function parseCustom() {
+    return customBox.value.split(/[\s,]+/).map(w => w.trim()).filter(Boolean);
+  }
+  customBox.addEventListener('input', () => {
+    customBtn.disabled = parseCustom().length === 0;
+  });
+  customBtn.addEventListener('click', () => {
+    const words = parseCustom();
+    if (words.length) start(words, 'My words');
+  });
+
+  // ---------- Session ----------
+  function start(words, label, useThreeWay) {
+    threeWay = !!useThreeWay;
+    $('btn-amber').style.display = threeWay ? 'flex' : 'none';
+    $('key-red').textContent = threeWay ? '3' : '2';
+    const unique = [...new Set(words)];
+    deck = shuffle(unique.slice());
+    stats = {};
+    unique.forEach(w => stats[w] = { green: 0, amber: 0, red: 0, streak: 0 });
+    retired = [];
+    totalWords = unique.length;
+    listLabel = label;
+    $('meter-list').textContent = label;
+    show('practice');
+    render();
+  }
+
+  function render() {
+    if (!deck.length) return finish();
+    $('word').textContent = deck[0];
+    $('meter-label').textContent = `${retired.length} of ${totalWords} known`;
+    $('fill').style.width = (retired.length / totalWords * 100) + '%';
+  }
+
+  function rate(rating) {
+    if (!deck.length) return;
+    const word = deck.shift();
+    const s = stats[word];
+    s[rating]++;
+
+    if (rating === 'green') {
+      s.streak++;
+      if (s.streak >= GREENS_TO_RETIRE) {
+        retired.push(word);
+        return showReward(word);
+      }
+    } else {
+      // Amber counts as read correctly, but a catch needs two clean reads,
+      // so a slow or self-corrected one resets the streak just like a miss.
+      s.streak = 0;
+    }
+
+    requeue(word, rating);
+    render();
+  }
+
+  // Puts a word back into the deck at a randomized depth so a run of correct
+  // answers doesn't bring the same words back in the same order. When the deck
+  // is shorter than the gap, the word goes to the very back — that's the largest
+  // gap available and keeps late-round repeats from bunching up.
+  function requeue(word, rating) {
+    const [min, max] = REQUEUE[rating];
+    const target = min + Math.floor(Math.random() * (max - min + 1));
+    deck.splice(Math.min(deck.length, target), 0, word);
+  }
+
+  document.querySelectorAll('.rate-btn').forEach(btn => {
+    btn.addEventListener('click', () => rate(btn.dataset.rating));
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!screens.practice.classList.contains('active')) return;
+    if (e.key === '1') rate('green');
+    if (e.key === '2') rate(threeWay ? 'amber' : 'red');
+    if (e.key === '3' && threeWay) rate('red');
+  });
+
+  $('quit').addEventListener('click', finish);
+
+  // ---------- Reward ----------
+  // Tries Name.png, then .jpg, then .jpeg in this folder; falls back to emoji.
+  function characterArt(idx, mode) {
+    const img = document.createElement('img');
+    img.className = mode === 'hero' ? 'reward-hero' : 'caught-mini';
+    img.alt = CHARACTERS[idx];
+    let ext = 0;
+    img.onerror = function () {
+      ext++;
+      if (ext < IMAGE_EXTENSIONS.length) {
+        img.src = `${CHARACTERS[idx]}.${IMAGE_EXTENSIONS[ext]}`;
+      } else {
+        const span = document.createElement('span');
+        span.textContent = FALLBACK_EMOJI[idx];
+        if (mode === 'hero') span.className = 'reward-emoji';
+        img.replaceWith(span);
+      }
+    };
+    img.src = `${CHARACTERS[idx]}.${IMAGE_EXTENSIONS[0]}`;
+    return img;
+  }
+
+  function buildSentence(word, name) {
+    const template = SENTENCES[word.toLowerCase()];
+    const safe = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    if (!template) {
+      return `${safe(name)} is proud! You read <mark>${safe(word)}</mark>.`;
+    }
+    const filled = safe(template.replace(/\{n\}/g, name));
+    // Highlight the target word wherever it appears, whole-word only.
+    const pattern = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    return filled.replace(pattern, m => `<mark>${m}</mark>`);
+  }
+
+  function showReward(word) {
+    const idx = (retired.length - 1) % CHARACTERS.length;
+    const name = CHARACTERS[idx];
+
+    const art = $('reward-art');
+    art.innerHTML = '';
+    art.appendChild(characterArt(idx, 'hero'));
+
+    $('reward-name').textContent = name;
+    $('reward-sentence').innerHTML = buildSentence(word, name);
+
+    const strip = $('caught-strip');
+    strip.innerHTML = '';
+    retired.forEach((_, i) => strip.appendChild(characterArt(i % CHARACTERS.length, 'small')));
+
+    show('reward');
+    playCatch();
+  }
+
+  // Shows the shaking-pokeball gif, then swaps to the character. If the gif
+  // file isn't there, the reveal just happens right away.
+  function playCatch() {
+    const anim = $('catch-anim');
+    const reveal = $('reveal');
+    const gif = $('catch-gif');
+    let done = false;
+
+    const finishCatch = () => {
+      if (done) return;
+      done = true;
+      anim.style.display = 'none';
+      reveal.style.display = 'block';
+    };
+
+    gif.onerror = finishCatch;
+    gif.onload = () => {
+      anim.style.display = 'block';
+      reveal.style.display = 'none';
+      setTimeout(finishCatch, CATCH_MS);
+    };
+    // Re-set src each time so the gif restarts from frame one.
+    gif.src = '';
+    gif.src = CATCH_GIF + '?t=' + Date.now();
+  }
+
+  $('reward-next').addEventListener('click', () => {
+    if (!deck.length) return finish();
+    show('practice');
+    render();
+  });
+
+  // ---------- Report ----------
+  function finish() {
+    // Worst outcome wins: a word missed once counts as still training.
+    const red = [], amber = [], green = [];
+    Object.keys(stats).forEach(w => {
+      const s = stats[w];
+      if (s.red > 0) red.push(w);
+      else if (threeWay && s.amber > 0) amber.push(w);
+      else green.push(w);
+    });
+
+    // The middle band only means something on Master Ball, where speed is the goal.
+    $('tally-amber').style.display = threeWay ? 'block' : 'none';
+    $('group-amber').style.display = threeWay ? 'block' : 'none';
+    $('tally').style.gridTemplateColumns = threeWay ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
+
+    $('t-green').textContent = green.length;
+    $('t-amber').textContent = amber.length;
+    $('t-red').textContent = red.length;
+
+    fillChips('g-green', green, 'None caught clean yet — worth another round.');
+    fillChips('g-amber', amber, 'Nothing needed extra time.');
+    fillChips('g-red', red, 'Nothing missed today.');
+
+    const done = deck.length === 0;
+    $('report-title').textContent = done ? 'All words known' : 'Session results';
+    $('report-lede').textContent = done
+      ? `He got through every word in ${listLabel}.`
+      : `${retired.length} of ${totalWords} words in ${listLabel} came easily by the end.`;
+
+    saveTrouble([...red, ...amber]);
+    show('report');
+  }
+
+  function fillChips(id, words, emptyMsg) {
+    const box = $(id);
+    box.innerHTML = '';
+    if (!words.length) {
+      const p = document.createElement('span');
+      p.className = 'none';
+      p.textContent = emptyMsg;
+      box.appendChild(p);
+      return;
+    }
+    words.sort().forEach(w => {
+      const c = document.createElement('span');
+      c.className = 'chip';
+      c.textContent = w;
+      box.appendChild(c);
+    });
+  }
+
+  function saveTrouble(words) {
+    try { localStorage.setItem(TROUBLE_KEY, JSON.stringify(words)); } catch (e) { /* storage off */ }
+  }
+  function loadTrouble() {
+    try {
+      const raw = localStorage.getItem(TROUBLE_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+
+  $('again').addEventListener('click', () => {
+    customBox.value = '';
+    customBtn.disabled = true;
+    buildSetup();
+    show('setup');
+  });
+
+  buildSetup();
+})();
+</script>
+
+</body>
+</html>
