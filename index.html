@@ -1123,7 +1123,8 @@
     try {
       var b = document.body;
       b.style.zoom = 1;
-      var need = document.documentElement.scrollHeight, have = window.innerHeight;
+      var c = document.querySelector('.card, .frame');
+      var need = c ? c.offsetHeight + 64 : document.documentElement.scrollHeight, have = window.innerHeight;
       var z = need > have + 2 ? Math.max(0.4, have / need) : 1;
       b.style.zoom = z === 1 ? '' : z.toFixed(3);
     } catch (e) { /* ignore */ }
