@@ -1116,5 +1116,21 @@
 })();
 </script>
 
+<script>
+(function () {
+  // If the page is taller than the window, shrink it so everything shows without scrolling.
+  function fit() {
+    try {
+      var b = document.body;
+      b.style.zoom = 1;
+      var need = document.documentElement.scrollHeight, have = window.innerHeight;
+      var z = need > have + 2 ? Math.max(0.4, have / need) : 1;
+      b.style.zoom = z === 1 ? '' : z.toFixed(3);
+    } catch (e) { /* ignore */ }
+  }
+  setInterval(fit, 400);
+  window.addEventListener('resize', fit);
+})();
+</script>
 </body>
 </html>
